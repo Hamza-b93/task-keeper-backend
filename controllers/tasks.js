@@ -1,8 +1,7 @@
 "use strict";
 
 // const bcrypt = require("bcryptjs");
-const CategoryModel = require("../models/categories.js");
-const PlatformModel = require("../models/platforms.js");
+const TaskModel = require("../models/tasks.js");
 const fs = require("fs");
 const { join } = require("path");
 
@@ -10,14 +9,14 @@ const mv = require("mv");
 const util = require("util");
 const mvPromisified = util.promisify(mv);
 
-const findCategory = async function (request, reply, next) {
+const findTask = async function (request, reply, next) {
   const id = request.params.id;
   try {
-    const category = await CategoryModel.findOne({
+    const task = await TaskModel.findOne({
       _id: id,
     });
-    if (category && (category.length !== 0 || category !== null || category !== undefined)) {
-      return reply.send(category);
+    if (task && (task.length !== 0 || task !== null || task !== undefined)) {
+      return reply.send(task);
     } else {
       throw new Error("ResourceNotFound");
     };
@@ -30,7 +29,7 @@ const findCategory = async function (request, reply, next) {
   };
 };
 
-// const findCategories = async (request, reply, next) => {
+// const findTasks = async (request, reply, next) => {
 //   try {
 //     const categories = await CategoryModel.find({});
 //     if (categories && categories.length > 0) {
@@ -44,7 +43,7 @@ const findCategory = async function (request, reply, next) {
 // };
 
 
-const findCategories = async (request, reply, next) => {
+const findTasks = async (request, reply, next) => {
   try {
     const { limit = 10, cursor } = request.query;
 
@@ -56,16 +55,16 @@ const findCategories = async (request, reply, next) => {
     }
 
     // Fetch data with limit + 1 to check for the next page
-    const categories = await CategoryModel.find(query).limit(parseInt(limit) + 1).sort({ _id: 1 });
+    const tasks = await TaskModel.find(query).limit(parseInt(limit) + 1).sort({ _id: 1 });
 
     // Extract the actual data for the current page
-    const result = categories.slice(0, parseInt(limit));
+    const result = tasks.slice(0, parseInt(limit));
 
     // Check if there's more data
-    const hasNextPage = categories.length > parseInt(limit);
+    const hasNextPage = tasks.length > parseInt(limit);
 
     // Extract the cursor for the next page
-    const nextCursor = hasNextPage ? categories[categories.length - 1]._id : null;
+    const nextCursor = hasNextPage ? tasks[tasks.length - 1]._id : null;
 
     if (result && result.length > 0) {
       return reply.send({
@@ -87,17 +86,20 @@ const findCategories = async (request, reply, next) => {
   }
 };
 
-const insertCategory = async (request, reply, next) => {
-  const { categoryType, sortPosition } = request.body;
-  const tags = request.body.tags;
+const insertTask = async (request, reply, next) => {
+  const { currentStatus, description, editors, expectedReleaseDate, guests, hosts, isEdited, isShot } = request.body;
+  const isUploaded = request.body.isUploaded;
+  const remarks = request.body.remarks;
+  const researchLinks = request.body.researchLinks;
+  const segment = request.body.segment;
   const title = request.body.title;
 
   // let id;
-  let upperCaseTagsArray = [];
+  // let upperCaseTagsArray = [];
   try {
-    await tags.forEach(element => {
-      upperCaseTagsArray.push(element.toUpperCase());
-    });
+    // await tags.forEach(element => {
+    //   upperCaseTagsArray.push(element.toUpperCase());
+    // });
     // const count = await CategoryModel.countDocuments({});
     // if (count <= 0) {
     //   id = 1;
@@ -107,12 +109,21 @@ const insertCategory = async (request, reply, next) => {
     //   });
     //   id = Number(latestRecord._id) + 1;
     // };
-    const category = await CategoryModel.create({
+    const category = await TaskModel.create({
       createdAt: new Date(),
-      categoryType: categoryType.toUpperCase(),
-      sortPosition: sortPosition,
-      tags: upperCaseTagsArray,
-      title: title.toUpperCase()
+      currentStatus: currentStatus,
+      description: description,
+      editors: editors,
+      expectedReleaseDate: expectedReleaseDate,
+      guests: guests,
+      hosts: hosts,
+      isEdited: isEdited,
+      isShot: isShot,
+      isUploaded: isUploaded,
+      remarks: remarks,
+      researchLinks: researchLinks,
+      segment: segment,
+      title: title
     });
     return reply.send("Success!");
   } catch (error) {
@@ -207,8 +218,12 @@ const uploadImages = async (request, reply, next) => {
   };
 };
 
-const updateCategory = async (request, reply, next) => {
-  const { categoryType, sortPosition, tags } = request.body;
+const updateTask = async (request, reply, next) => {
+  const { currentStatus, description, editors, expectedReleaseDate, guests, hosts, isEdited, isShot } = request.body;
+  const isUploaded = request.body.isUploaded;
+  const remarks = request.body.remarks;
+  const researchLinks = request.body.researchLinks;
+  const segment = request.body.segment;
   const title = request.body.title;
   // const imagePath = request.body.imagePath;
   const id = request.params.id;
@@ -224,11 +239,20 @@ const updateCategory = async (request, reply, next) => {
           _id: id,
         },
         {
-          categoryType: categoryType,
-          sortPosition: sortPosition,
-          tags: tags,
+          currentStatus: currentStatus,
+          description: description,
+          editors: editors,
+          expectedReleaseDate: expectedReleaseDate,
+          guests: guests,
+          hosts: hosts,
+          isEdited: isEdited,
+          isShot: isShot,
+          isUploaded: isUploaded,
+          remarks: remarks,
+          researchLinks: researchLinks,
+          segment: segment,
           title: title,
-          updatedAt: new Date(),
+          updatedAt: new Date()
         }
       );
       return reply.send("Success!");
@@ -242,43 +266,43 @@ const updateCategory = async (request, reply, next) => {
   };
 };
 
-async function deleteCategory(request, reply, next) {
-  const id = request.params.id;
-  try {
-    const assignedToPlatform = await PlatformModel.find({
-      categoryID: id,
-    });
-    if (assignedToPlatform && assignedToPlatform.length > 0) {
-      throw new Error("AssignedToPlatform");
-    } else {
-      const deletedCategory = await CategoryModel.deleteOne({
-        _id: id,
-      });
-      if (deletedCategory.deletedCount == 0) {
-        throw new Error("ResourceNotFound");
-      } else {
-        return reply.send("Success!");
-      };
-    };
-  } catch (error) {
-    if (error.message == "AssignedToPlatform") {
-      return reply.forbidden(
-        "Cannot Deleted Category As It Has Platforms Assigned To It!"
-      );
-    } else if (error.message == "ResourceNotFound") {
-      return reply.notFound("The Requested Resource Does Not Exist!");
-    } else {
-      return reply.internalServerError(error.message);
-    }
-  }
-}
+// async function deleteTask(request, reply, next) {
+//   const id = request.params.id;
+//   try {
+//     const assignedToPlatform = await PlatformModel.find({
+//       categoryID: id,
+//     });
+//     if (assignedToPlatform && assignedToPlatform.length > 0) {
+//       throw new Error("AssignedToPlatform");
+//     } else {
+//       const deletedCategory = await CategoryModel.deleteOne({
+//         _id: id,
+//       });
+//       if (deletedCategory.deletedCount == 0) {
+//         throw new Error("ResourceNotFound");
+//       } else {
+//         return reply.send("Success!");
+//       };
+//     };
+//   } catch (error) {
+//     if (error.message == "AssignedToPlatform") {
+//       return reply.forbidden(
+//         "Cannot Deleted Category As It Has Platforms Assigned To It!"
+//       );
+//     } else if (error.message == "ResourceNotFound") {
+//       return reply.notFound("The Requested Resource Does Not Exist!");
+//     } else {
+//       return reply.internalServerError(error.message);
+//     }
+//   }
+// }
 
 module.exports = {
-  findCategory,
-  findCategories,
-  insertCategory,
+  findTask,
+  findTasks,
+  insertTask,
   retrieveImage,
-  updateCategory,
+  updateTask,
   uploadImages,
-  deleteCategory,
+  // deleteTask,
 };

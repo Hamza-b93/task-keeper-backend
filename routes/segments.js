@@ -1,15 +1,15 @@
 "use strict";
 
-const usersController = require("../controllers/users.js");
-const usersValidationSchema = require("../validations/users.js");
+const segmentsController = require("../controllers/segments.js");
+// const segmentsCalidationSchema = require("../validations/segments.js");
 
 module.exports = async function (fastify, opts) {
-  fastify.get('/users/findUser/:id', usersController.findUser);
-  fastify.get('/users/findUsers', usersValidationSchema.findUsers, usersController.findUsers);
-  fastify.post("/users/signin", usersValidationSchema.signin, usersController.signin);
-  fastify.post("/users/signup", usersController.signup);
-  fastify.put("/users/updateUser/:id", usersController.updateUser);
-  fastify.put("/users/updateImage/:id", usersController.updateImage);
+  fastify.get('/segments/findSegment/:id', segmentsController.findSegment);
+  fastify.get('/segments/findSegments', segmentsController.findSegments);
+  // fastify.post("/users/signin", usersValidationSchema.signin, usersController.signin);
+  fastify.post("/segments/insertSegment", segmentsController.insertSegment);
+  fastify.put("/segments/updateSegment/:id", segmentsController.updateSegment);
+  // fastify.put("/users/updateImage/:id", usersController.updateImage);
   // fastify.delete("/users/deleteUser/:id", usersValidationSchema.deleteUser, usersController.deleteUser);
 };
 

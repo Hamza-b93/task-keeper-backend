@@ -1,7 +1,7 @@
 "use strict";
 
 // const bcrypt = require("bcryptjs");
-const AdModel = require("../models/ads.js");
+// const AdModel = require("../models/ads.js");
 const UserModel = require("../models/users.js");
 const nodemailer = require("nodemailer");
 
@@ -583,29 +583,29 @@ async function deactivateUser(request, reply, next) {
   }
 }
 
-async function deleteUser(request, reply, next) {
-  const id = request.params.id;
-  try {
-    const deletedAds = await AdModel.deleteMany({
-      userID: id,
-    });
-    // Add Support To Delete User's Cart.
-    const deletedUser = await UserModel.deleteOne({
-      _id: id,
-    });
-    if ((deletedUser.deletedCount = 0)) {
-      throw new Error("ResourceNotFound");
-    } else {
-      return reply.send("Resource Deleted Successfully!");
-    }
-  } catch (error) {
-    if (error.message == "ResourceNotFound") {
-      return reply.notFound("The Requested Resource Does Not Exist!");
-    } else {
-      return reply.internalServerError(error.message);
-    }
-  }
-}
+// async function deleteUser(request, reply, next) {
+//   const id = request.params.id;
+//   try {
+//     const deletedAds = await AdModel.deleteMany({
+//       userID: id,
+//     });
+//     // Add Support To Delete User's Cart.
+//     const deletedUser = await UserModel.deleteOne({
+//       _id: id,
+//     });
+//     if ((deletedUser.deletedCount = 0)) {
+//       throw new Error("ResourceNotFound");
+//     } else {
+//       return reply.send("Resource Deleted Successfully!");
+//     }
+//   } catch (error) {
+//     if (error.message == "ResourceNotFound") {
+//       return reply.notFound("The Requested Resource Does Not Exist!");
+//     } else {
+//       return reply.internalServerError(error.message);
+//     }
+//   }
+// }
 
 const verifyEmail = async (request, reply, next) => {
   /*
@@ -654,5 +654,5 @@ module.exports = {
   retrieveImage,
   updateUser,
   updateImage,
-  deleteUser,
+  // deleteUser,
 };

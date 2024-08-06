@@ -1,10 +1,10 @@
 const mongoose = require("mongoose");
 
 const segmentSchema = new mongoose.Schema({
-    _id: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-    },
+    // _id: {
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     required: false,
+    // },
     createdAt: {
         type: Date,
         required: true
@@ -23,7 +23,7 @@ const segmentSchema = new mongoose.Schema({
     },
     updatedAt: {
         type: Date,
-        trquired: false,
+        required: false,
     },
 });
 

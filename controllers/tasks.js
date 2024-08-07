@@ -15,7 +15,7 @@ const findTask = async function (request, reply, next) {
   try {
     const task = await TaskModel.findOne({
       _id: id,
-    });
+    }).populate('segment');
     if (task && (task.length !== 0 || task !== null || task !== undefined)) {
       return reply.send(task);
     } else {
@@ -46,46 +46,62 @@ const findTask = async function (request, reply, next) {
 
 const findTasks = async (request, reply, next) => {
   try {
-    const { limit = 10, cursor } = request.query;
+    const { limit = 10, cursor, direction = 'next' } = request.query;
 
     let query = {};
+    let sortOrder = 1;
 
-    // If there's a cursor, add it to the query
+    // Determine if we're paginating forwards or backwards
     if (cursor) {
-      query = { _id: { $gt: cursor } };
+      if (direction === 'next') {
+        query = { _id: { $gt: cursor } };
+        sortOrder = 1; // Ascending for next page
+      } else if (direction === 'previous') {
+        query = { _id: { $lt: cursor } };
+        sortOrder = -1; // Descending for previous page
+      }
     }
 
-    // Fetch data with limit + 1 to check for the next page
-    const tasks = await TaskModel.find(query).limit(parseInt(limit) + 1).sort({ _id: 1 });
+    // Fetch data with limit + 1 to check if there are more results
+    let tasks = await TaskModel.find(query).limit(parseInt(limit) + 1).sort({ _id: sortOrder });
+
+    // Reverse the result if fetching the previous page
+    if (direction === 'previous') {
+      tasks = tasks.reverse();
+    }
 
     // Extract the actual data for the current page
     const result = tasks.slice(0, parseInt(limit));
 
     // Check if there's more data
-    const hasNextPage = tasks.length > parseInt(limit);
+    const hasMore = tasks.length > parseInt(limit);
 
-    // Extract the cursor for the next page
-    const nextCursor = hasNextPage ? tasks[tasks.length - 1]._id : null;
+    // Extract the cursors for the next and previous pages
+    const nextCursor = hasMore ? tasks[tasks.length - 1]._id : null;
+    const prevCursor = result.length > 0 ? result[0]._id : null;
 
     if (result && result.length > 0) {
       return reply.send({
         data: result,
         pageInfo: {
-          hasNextPage,
+          hasNextPage: direction === 'next' ? hasMore : !!cursor,
+          hasPreviousPage: direction === 'previous' ? hasMore : !!cursor,
           nextCursor,
+          prevCursor,
         },
       });
     } else {
       throw new Error("ResourceNotFound");
     }
   } catch (error) {
-    if (error.message == "ResourceNotFound") {
+    if (error.message === "ResourceNotFound") {
       return reply.notFound("The Requested Resource Does Not Exist!");
     } else {
       return reply.badRequest(error.message);
     }
   }
 };
+
 
 const insertTask = async (request, reply, next) => {
   const { currentStatus, description, editors, expectedReleaseDate, guests, hosts, isEdited, isShot } = request.body;
@@ -98,12 +114,12 @@ const insertTask = async (request, reply, next) => {
   // let id;
   // let upperCaseTagsArray = [];
   try {
-    const segmentExists = await SegmentModel.findById(segment);
-    
-    if (segmentExists == null || undefined) {
-      throw new Error("ResourceNotFound");
-    }
-    else {
+    // const segmentExists = await SegmentModel.findById(segment);
+
+    // if (segmentExists == null || undefined) {
+    //   throw new Error("ResourceNotFound");
+    // }
+    // else {
       const category = await TaskModel.create({
         createdAt: new Date(),
         currentStatus: currentStatus,
@@ -121,7 +137,7 @@ const insertTask = async (request, reply, next) => {
         title: title
       });
       return reply.send("Success!");
-    };
+    // };
     // await tags.forEach(element => {
     //   upperCaseTagsArray.push(element.toUpperCase());
     // });

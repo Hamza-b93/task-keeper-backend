@@ -32,7 +32,7 @@ const findTask = async function (request, reply, next) {
 
 // const findTasks = async (request, reply, next) => {
 //   try {
-//     const categories = await CategoryModel.find({});
+//     const categories = await TaskModel.find({});
 //     if (categories && categories.length > 0) {
 //       return reply.send(categories);
 //     } else {
@@ -114,13 +114,13 @@ const insertTask = async (request, reply, next) => {
   // let id;
   // let upperCaseTagsArray = [];
   try {
-    // const segmentExists = await SegmentModel.findById(segment);
+    const segmentExists = await SegmentModel.findById(segment);
 
-    // if (segmentExists == null || undefined) {
-    //   throw new Error("ResourceNotFound");
-    // }
-    // else {
-      const category = await TaskModel.create({
+    if (segmentExists == null || undefined) {
+      throw new Error("ResourceNotFound");
+    }
+    else {
+      const task = await TaskModel.create({
         createdAt: new Date(),
         currentStatus: currentStatus,
         description: description,
@@ -137,15 +137,15 @@ const insertTask = async (request, reply, next) => {
         title: title
       });
       return reply.send("Success!");
-    // };
+    };
     // await tags.forEach(element => {
     //   upperCaseTagsArray.push(element.toUpperCase());
     // });
-    // const count = await CategoryModel.countDocuments({});
+    // const count = await TaskModel.countDocuments({});
     // if (count <= 0) {
     //   id = 1;
     // } else {
-    //   const latestRecord = await CategoryModel.findOne().sort({
+    //   const latestRecord = await TaskModel.findOne().sort({
     //     createdAt: -1,
     //   });
     //   id = Number(latestRecord._id) + 1;
@@ -186,12 +186,12 @@ const retrieveImage = async (request, reply, next) => {
             id = 1;
         }
         else {
-            const latestRecord = await CategoryModel.findOne().sort({
+            const latestRecord = await TaskModel.findOne().sort({
             createdAt: -1,
             });
             id = Number(latestRecord._id) + 1;
         }
-        const category = await CategoryModel.create({
+        const task = await TaskModel.create({
             _id: id,
             createdAt: new Date(),
             gender: gender,
@@ -257,13 +257,13 @@ const updateTask = async (request, reply, next) => {
   // const imagePath = request.body.imagePath;
   const id = request.params.id;
   try {
-    const categoryExists = await CategoryModel.exists({
+    const taskExists = await TaskModel.exists({
       _id: id,
     });
-    if (categoryExists == null) {
+    if (taskExists == null) {
       throw new Error("ResourceNotFound");
     } else {
-      const updatedCategory = await CategoryModel.updateOne(
+      const updatedTask = await TaskModel.updateOne(
         {
           _id: id,
         },
@@ -304,7 +304,7 @@ const updateTask = async (request, reply, next) => {
 //     if (assignedToPlatform && assignedToPlatform.length > 0) {
 //       throw new Error("AssignedToPlatform");
 //     } else {
-//       const deletedCategory = await CategoryModel.deleteOne({
+//       const deletedCategory = await TaskModel.deleteOne({
 //         _id: id,
 //       });
 //       if (deletedCategory.deletedCount == 0) {
